@@ -21,7 +21,7 @@ app.get("/auth/discord", async (req, res) => {
     }
 
     // 🔥 USE ENV BASED REDIRECT
-    const redirectUri = "http://localhost:5173/auth/callback";
+    const redirectUri = "https://maanagaram.netlify.app/auth/callback";
 
     const params = new URLSearchParams();
     params.append("client_id", process.env.CLIENT_ID);
