@@ -1,13 +1,14 @@
 {
-  "name": "maanagaram-bot",
+  "name": "maanagaram-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Maanagaram RP Backend (Discord OAuth + Application Bot)",
+  "main": "api.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node api.js",
+    "dev": "node api.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["discord", "bot", "oauth", "express", "maanagaram"],
+  "author": "Vijay",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
