@@ -73,14 +73,22 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
 
   /* ================= LOGO ================= */
 /* ================= LOGO ================= */
+/* ================= LOGO ================= */
 try {
   const logo = await loadImage(logoPath);
 
+  const logoSize = 110; // bigger & clean
+
+  // ✅ BEST QUALITY SETTINGS
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // draw smaller for sharpness
-  ctx.drawImage(logo, 50, 40, 60, 60);
+  // ✅ DRAW SHARP (center crop effect)
+  ctx.drawImage(
+    logo,
+    0, 0, logo.width, logo.height,   // full source
+    50, 30, logoSize, logoSize       // destination
+  );
 
 } catch (err) {
   console.log("⚠️ Logo load failed:", err.message);
