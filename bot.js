@@ -11,7 +11,7 @@ const client = new Client({
 /* =========================
    ✅ BOT READY
 ========================= */
-client.once("ready", () => {
+client.once("clientReady", () => {
   console.log(`🤖 Bot running as ${client.user.tag}`);
 });
 
@@ -21,29 +21,42 @@ client.once("ready", () => {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return;
 
+  const [action, userId] = interaction.customId.split("_");
+
   try {
-    const [action, userId] = interaction.customId.split("_");
+    // ✅ IMMEDIATE ACK (prevents timeout)
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferUpdate();
+    }
 
     // 🔍 Fetch member safely
-    const member = await interaction.guild.members.fetch(userId).catch(() => null);
+    const member = await interaction.guild.members
+      .fetch(userId)
+      .catch(() => null);
 
     if (!member) {
-      return interaction.reply({
+      return interaction.editReply({
         content: "⚠️ User not found in server.",
-        ephemeral: true,
+        components: [],
       });
     }
 
     /* ================= ACCEPT ================= */
     if (action === "accept") {
+      try {
+        await member.roles.add(process.env.ROLE_ID);
+      } catch (roleErr) {
+        console.error("❌ Role Error:", roleErr);
 
-      // ✅ Assign role
-      await member.roles.add(process.env.ROLE_ID);
+        return interaction.editReply({
+          content: "⚠️ Failed to assign role. Check bot permissions.",
+          components: [],
+        });
+      }
 
-      // 🎉 Send visa message
-      const visaChannel = await client.channels.fetch(
-        process.env.VISA_CHANNEL_ID
-      );
+      const visaChannel = await client.channels
+        .fetch(process.env.VISA_CHANNEL_ID)
+        .catch(() => null);
 
       if (visaChannel) {
         await visaChannel.send(
@@ -51,8 +64,7 @@ client.on("interactionCreate", async (interaction) => {
         );
       }
 
-      // ✅ Update message + disable buttons
-      await interaction.update({
+      return interaction.editReply({
         content: `✅ Accepted <@${userId}>`,
         components: [],
       });
@@ -60,7 +72,7 @@ client.on("interactionCreate", async (interaction) => {
 
     /* ================= REJECT ================= */
     if (action === "reject") {
-      await interaction.update({
+      return interaction.editReply({
         content: `❌ Rejected <@${userId}>`,
         components: [],
       });
@@ -69,13 +81,24 @@ client.on("interactionCreate", async (interaction) => {
   } catch (err) {
     console.error("❌ Button Error:", err);
 
-    if (!interaction.replied) {
-      await interaction.reply({
+    try {
+      await interaction.editReply({
         content: "⚠️ Something went wrong.",
-        ephemeral: true,
+        components: [],
       });
-    }
+    } catch {}
   }
+});
+
+/* =========================
+   🚨 GLOBAL ERROR HANDLER (VERY IMPORTANT)
+========================= */
+client.on("error", (err) => {
+  console.error("🔥 Client Error:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("🔥 Unhandled Rejection:", err);
 });
 
 /* =========================
