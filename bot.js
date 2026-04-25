@@ -1,5 +1,6 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, AttachmentBuilder } = require("discord.js");
+const generateCard = require("./utils/generateCard");
 
 const client = new Client({
   intents: [
@@ -32,11 +33,9 @@ const safeEdit = async (interaction, data) => {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return;
 
-  // 🔥 NOW INCLUDES APPLICATION ID
   const [action, userId, applicationId] = interaction.customId.split("_");
 
   try {
-    // ✅ ACK
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferUpdate();
     }
@@ -59,16 +58,20 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
+    const avatarUrl = member.user.displayAvatarURL({
+      extension: "png",
+      size: 512,
+    });
+
     /* ================= ACCEPT ================= */
     if (action === "accept") {
       try {
         await member.roles.add(process.env.ROLE_ID);
 
-        // ❌ Remove pending role
+        // remove pending role if exists
         if (member.roles.cache.has(process.env.PENDING_ROLE_ID)) {
           await member.roles.remove(process.env.PENDING_ROLE_ID);
         }
-
       } catch (err) {
         console.error("❌ Accept role error:", err);
 
@@ -78,16 +81,28 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
+      const { buffer } = await generateCard({
+        username: member.user.username,
+        avatarUrl,
+        status: "accept",
+      });
+
+      const attachment = new AttachmentBuilder(buffer, {
+        name: "accepted.png",
+      });
+
       const visaChannel = await client.channels
         .fetch(process.env.VISA_CHANNEL_ID)
         .catch(() => null);
 
       if (visaChannel) {
-        await visaChannel.send(
-          `🎉 <@${userId}> your visa has been accepted!\n🆔 Application ID: **${applicationId}**`
-        );
+        await visaChannel.send({
+          content: `🎉 <@${userId}> your visa has been accepted!\n🆔 Application ID: **${applicationId}**`,
+          files: [attachment],
+        });
       }
 
+      // remove buttons
       await interaction.message.edit({ components: [] });
 
       return safeEdit(interaction, {
@@ -106,14 +121,25 @@ client.on("interactionCreate", async (interaction) => {
         console.error("❌ Reject role error:", err);
       }
 
+      const { buffer } = await generateCard({
+        username: member.user.username,
+        avatarUrl,
+        status: "reject",
+      });
+
+      const attachment = new AttachmentBuilder(buffer, {
+        name: "rejected.png",
+      });
+
       const rejectChannel = await client.channels
         .fetch(process.env.REJECT_CHANNEL_ID)
         .catch(() => null);
 
       if (rejectChannel) {
-        await rejectChannel.send(
-          `❌ <@${userId}> your application has been rejected.\n🆔 Application ID: **${applicationId}**\nPlease contact <@&${process.env.IMMIGRATION_ROLE_ID}>`
-        );
+        await rejectChannel.send({
+          content: `❌ <@${userId}> your application has been rejected.\n🆔 Application ID: **${applicationId}**\nPlease contact <@&${process.env.IMMIGRATION_ROLE_ID}>`,
+          files: [attachment],
+        });
       }
 
       await interaction.message.edit({ components: [] });
@@ -127,12 +153,12 @@ client.on("interactionCreate", async (interaction) => {
     /* ================= WAITLIST ================= */
     if (action === "waitlist") {
       try {
+        // remove accepted role if exists
         if (member.roles.cache.has(process.env.ROLE_ID)) {
           await member.roles.remove(process.env.ROLE_ID);
         }
 
         await member.roles.add(process.env.PENDING_ROLE_ID);
-
       } catch (err) {
         console.error("❌ Pending role error:", err);
 
@@ -142,16 +168,28 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
+      const { buffer } = await generateCard({
+        username: member.user.username,
+        avatarUrl,
+        status: "waitlist",
+      });
+
+      const attachment = new AttachmentBuilder(buffer, {
+        name: "waitlist.png",
+      });
+
       const waitChannel = await client.channels
         .fetch(process.env.WAITING_CHANNEL_ID)
         .catch(() => null);
 
       if (waitChannel) {
-        await waitChannel.send(
-          `⏳ <@${userId}> your application is in waiting list.\n🆔 Application ID: **${applicationId}**\nJoin <#${process.env.WAITING_VC_ID}>`
-        );
+        await waitChannel.send({
+          content: `⏳ <@${userId}> your application is in waiting list.\n🆔 Application ID: **${applicationId}**\nJoin <#${process.env.WAITING_VC_ID}>`,
+          files: [attachment],
+        });
       }
 
+      // keep buttons
       return safeEdit(interaction, {
         content: `⏳ Waiting List | <@${userId}> | 🆔 ${applicationId}`,
         components: interaction.message.components,
