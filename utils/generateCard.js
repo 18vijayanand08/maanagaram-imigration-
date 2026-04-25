@@ -67,40 +67,45 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
   ctx.fillStyle = "rgba(255,255,255,0.05)";
   ctx.fillRect(30, 30, WIDTH - 60, HEIGHT - 60);
 
-  /* ================= HEADER BAR ================= */
-  ctx.fillStyle = color;
-  ctx.fillRect(30, 30, WIDTH - 60, 80);
+/* ================= HEADER BAR ================= */
+ctx.fillStyle = color;
+ctx.fillRect(30, 30, WIDTH - 60, 80);
 
-  /* ================= LOGO ================= */
 /* ================= LOGO ================= */
-/* ================= LOGO ================= */
+let logoWidth = 130;
+let logoHeight = 130;
+let logoX = 45;
+let logoY = 30 + (80 - logoHeight) / 2; // center vertically
+
 try {
   const logo = await loadImage(logoPath);
 
-  const logoSize = 110; // bigger & clean
-
-  // ✅ BEST QUALITY SETTINGS
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // ✅ DRAW SHARP (center crop effect)
+  // draw logo (bigger + centered)
   ctx.drawImage(
     logo,
-    0, 0, logo.width, logo.height,   // full source
-    50, 30, logoSize, logoSize       // destination
+    0, 0, logo.width, logo.height,
+    logoX,
+    logoY,
+    logoWidth,
+    logoHeight
   );
 
 } catch (err) {
   console.log("⚠️ Logo load failed:", err.message);
 }
 
-  /* ================= HEADER TEXT ================= */
-  ctx.fillStyle = "#000";
-  ctx.font = "bold 26px Inter";
-  ctx.fillText("MAANAGARAM CITY", 120, 70);
+/* ================= HEADER TEXT ================= */
+const textStartX = logoX + logoWidth + 20;
 
-  ctx.font = "16px Inter";
-  ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", 120, 95);
+ctx.fillStyle = "#000";
+ctx.font = "bold 28px Inter";
+ctx.fillText("MAANAGARAM CITY", textStartX, 65);
+
+ctx.font = "16px Inter";
+ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", textStartX, 90);
 
   /* ================= STATUS BADGE ================= */
   ctx.fillStyle = "#ffffff";
