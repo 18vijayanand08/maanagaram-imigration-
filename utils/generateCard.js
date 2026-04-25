@@ -1,14 +1,14 @@
 const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 const path = require("path");
 
-/* ================= REGISTER FONT ================= */
+/* ================= FONT ================= */
 GlobalFonts.registerFromPath(
   path.join(__dirname, "fonts", "Inter-Bold.ttf"),
   "Inter"
 );
 
 const WIDTH = 900;
-const HEIGHT = 400;
+const HEIGHT = 420;
 
 /* ================= COLORS ================= */
 const COLORS = {
@@ -17,7 +17,7 @@ const COLORS = {
   waitlist: "#facc15",
 };
 
-/* ================= MAIN FUNCTION ================= */
+/* ================= MAIN ================= */
 async function generateCard({ username, avatarUrl, status, applicationId }) {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext("2d");
@@ -32,99 +32,126 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  /* ================= BORDER ================= */
+  /* ================= OUTER GLOW BORDER ================= */
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 25;
+
   ctx.strokeStyle = color;
   ctx.lineWidth = 3;
-
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 20;
-
-  ctx.strokeRect(8, 8, WIDTH - 16, HEIGHT - 16);
+  ctx.strokeRect(10, 10, WIDTH - 20, HEIGHT - 20);
 
   ctx.shadowBlur = 0;
 
-  /* ================= GLASS PANEL ================= */
-  ctx.fillStyle = "rgba(255,255,255,0.04)";
-  ctx.fillRect(40, 90, 520, 260);
+  /* ================= INNER CARD ================= */
+  const cardGradient = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+  cardGradient.addColorStop(0, "rgba(255,255,255,0.05)");
+  cardGradient.addColorStop(1, "rgba(255,255,255,0.02)");
 
-  /* ================= TITLE ================= */
+  ctx.fillStyle = cardGradient;
+  ctx.fillRect(30, 30, WIDTH - 60, HEIGHT - 60);
+
+  /* ================= HEADER ================= */
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 32px Inter";
-  ctx.fillText("MAANAGARAM RP", 50, 60);
+  ctx.font = "bold 30px Inter";
+  ctx.fillText("MAANAGARAM RP", 60, 80);
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "16px Inter";
+  ctx.fillText("IMMIGRATION DEPARTMENT", 60, 105);
 
   /* ================= STATUS BADGE ================= */
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 15;
+
   ctx.fillStyle = color;
-  ctx.fillRect(50, 100, 170, 45);
+  ctx.fillRect(60, 130, 200, 45);
+
+  ctx.shadowBlur = 0;
 
   ctx.fillStyle = "#000";
   ctx.font = "bold 20px Inter";
-  ctx.fillText(status.toUpperCase(), 65, 130);
+  ctx.fillText(status.toUpperCase(), 75, 160);
+
+  /* ================= LEFT PANEL ================= */
+  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  ctx.fillRect(50, 190, 480, 170);
 
   /* ================= USER ================= */
   ctx.fillStyle = "#94a3b8";
-  ctx.font = "16px Inter";
-  ctx.fillText("APPLICANT", 50, 190);
+  ctx.font = "15px Inter";
+  ctx.fillText("APPLICANT NAME", 70, 230);
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 26px Inter";
-  ctx.fillText(username || "UNKNOWN", 50, 225);
+  ctx.fillText(username || "UNKNOWN", 70, 260);
 
   /* ================= APP ID ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "15px Inter";
-  ctx.fillText("APPLICATION ID", 50, 270);
+  ctx.fillText("APPLICATION ID", 70, 300);
 
   ctx.fillStyle = color;
   ctx.font = "bold 22px Inter";
-  ctx.fillText(applicationId || "UNKNOWN", 50, 300);
+  ctx.fillText(applicationId || "UNKNOWN", 70, 330);
 
-  /* ================= DIVIDER ================= */
-  ctx.strokeStyle = "#1e293b";
-  ctx.beginPath();
-  ctx.moveTo(50, 320);
-  ctx.lineTo(540, 320);
-  ctx.stroke();
+  /* ================= SECURITY STRIP ================= */
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.15;
+  ctx.fillRect(50, 350, 480, 8);
+  ctx.globalAlpha = 1;
 
-  /* ================= AVATAR ================= */
+  /* ================= AVATAR SECTION ================= */
   try {
     const avatar = await loadImage(avatarUrl);
 
-    const size = 180;
-    const x = 650;
-    const y = 110;
+    const size = 170;
+    const x = 640;
+    const y = 120;
 
-    ctx.save();
+    /* Glow background circle */
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 30;
 
     ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2 + 8, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.05)";
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    /* Avatar clip */
+    ctx.save();
+    ctx.beginPath();
     ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-    ctx.closePath();
     ctx.clip();
 
     ctx.drawImage(avatar, x, y, size, size);
-
     ctx.restore();
 
-    /* Glow ring */
+    /* Ring */
     ctx.strokeStyle = color;
     ctx.lineWidth = 4;
-
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 15;
-
     ctx.beginPath();
     ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
     ctx.stroke();
-
-    ctx.shadowBlur = 0;
 
   } catch (err) {
     console.log("⚠️ Avatar load failed:", err.message);
   }
 
+  /* ================= RIGHT TEXT ================= */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "14px Inter";
+  ctx.fillText("STATUS", 640, 320);
+
+  ctx.fillStyle = color;
+  ctx.font = "bold 22px Inter";
+  ctx.fillText(status.toUpperCase(), 640, 350);
+
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
-  ctx.font = "14px Inter";
-  ctx.fillText("Maanagaram RP • Immigration System", 50, 370);
+  ctx.font = "13px Inter";
+  ctx.fillText("Maanagaram RP • Secure Immigration System", 60, 390);
 
   return {
     buffer: canvas.toBuffer("image/png"),
