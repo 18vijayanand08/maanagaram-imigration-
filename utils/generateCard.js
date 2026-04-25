@@ -7,6 +7,9 @@ GlobalFonts.registerFromPath(
   "Inter"
 );
 
+/* ================= LOGO ================= */
+const logoPath = path.join(__dirname, "assets", "logo.png");
+
 const WIDTH = 900;
 const HEIGHT = 420;
 
@@ -38,7 +41,7 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
 
   /* ================= WATERMARK ================= */
   ctx.save();
-  ctx.globalAlpha = 0.05;
+  ctx.globalAlpha = 0.04;
   ctx.translate(WIDTH / 2, HEIGHT / 2);
   ctx.rotate(-Math.PI / 6);
 
@@ -61,53 +64,72 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
   ctx.shadowBlur = 0;
 
   /* ================= INNER CARD ================= */
-  ctx.fillStyle = "rgba(255,255,255,0.04)";
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
   ctx.fillRect(30, 30, WIDTH - 60, HEIGHT - 60);
 
-  /* ================= HEADER ================= */
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 28px Inter";
-  ctx.textAlign = "left";
-  ctx.fillText("MAANAGARAM CITY", 60, 70);
+  /* ================= HEADER BAR ================= */
+  ctx.fillStyle = color;
+  ctx.fillRect(30, 30, WIDTH - 60, 80);
 
-  ctx.fillStyle = "#94a3b8";
+  /* ================= LOGO ================= */
+  try {
+    const logo = await loadImage(logoPath);
+    ctx.drawImage(logo, 50, 45, 50, 50);
+  } catch (err) {
+    console.log("⚠️ Logo load failed:", err.message);
+  }
+
+  /* ================= HEADER TEXT ================= */
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 26px Inter";
+  ctx.fillText("MAANAGARAM CITY", 120, 70);
+
   ctx.font = "16px Inter";
-  ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", 60, 95);
+  ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", 120, 95);
 
   /* ================= STATUS BADGE ================= */
-  ctx.fillStyle = color;
-  ctx.fillRect(60, 120, 220, 45);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(650, 50, 200, 40);
 
-  ctx.fillStyle = "#000";
-  ctx.font = "bold 20px Inter";
-  ctx.fillText(displayStatus, 75, 150);
+  ctx.fillStyle = color;
+  ctx.font = "bold 18px Inter";
+  ctx.fillText(displayStatus, 665, 78);
 
   /* ================= LEFT PANEL ================= */
-  ctx.fillStyle = "rgba(255,255,255,0.03)";
-  ctx.fillRect(50, 180, 500, 170);
+  ctx.fillStyle = "rgba(255,255,255,0.04)";
+  ctx.fillRect(50, 140, 500, 200);
 
   /* ================= USER ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
-  ctx.fillText("FULL NAME", 70, 220);
+  ctx.fillText("FULL NAME", 70, 190);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 26px Inter";
-  ctx.fillText(username || "UNKNOWN", 70, 250);
+  ctx.font = "bold 28px Inter";
+  ctx.fillText(username || "UNKNOWN", 70, 225);
 
   /* ================= APPLICATION ID ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
-  ctx.fillText("APPLICATION NUMBER", 70, 290);
+  ctx.fillText("APPLICATION NUMBER", 70, 270);
 
   ctx.fillStyle = color;
   ctx.font = "bold 22px Inter";
-  ctx.fillText(applicationId || "UNKNOWN", 70, 320);
+  ctx.fillText(applicationId || "UNKNOWN", 70, 300);
+
+  /* ================= STATUS TEXT ================= */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "14px Inter";
+  ctx.fillText("STATUS", 70, 330);
+
+  ctx.fillStyle = color;
+  ctx.font = "bold 22px Inter";
+  ctx.fillText(displayStatus, 70, 360);
 
   /* ================= SECURITY STRIP ================= */
   ctx.fillStyle = color;
   ctx.globalAlpha = 0.15;
-  ctx.fillRect(50, 350, 500, 8);
+  ctx.fillRect(50, 360, 500, 6);
   ctx.globalAlpha = 1;
 
   /* ================= AVATAR ================= */
@@ -116,43 +138,39 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
 
     const size = 170;
     const x = 650;
-    const y = 110;
+    const y = 150;
+
+    /* background plate */
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.fillRect(x - 10, y - 10, size + 20, size + 20);
 
     ctx.save();
-
     ctx.beginPath();
-    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+    ctx.rect(x, y, size, size);
     ctx.clip();
 
     ctx.drawImage(avatar, x, y, size, size);
-
     ctx.restore();
 
-    /* Border ring */
+    /* border */
     ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 15;
-
-    ctx.beginPath();
-    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, size, size);
 
   } catch (err) {
     console.log("⚠️ Avatar load failed:", err.message);
   }
 
-  /* ================= RIGHT STATUS ================= */
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "14px Inter";
-  ctx.fillText("STATUS", 650, 310);
+  /* ================= SIGNATURE ================= */
+  ctx.fillStyle = "#64748b";
+  ctx.font = "12px Inter";
+  ctx.fillText("Authorized Officer", 650, 350);
 
-  ctx.fillStyle = color;
-  ctx.font = "bold 22px Inter";
-  ctx.fillText(displayStatus, 650, 340);
+  ctx.beginPath();
+  ctx.moveTo(650, 360);
+  ctx.lineTo(820, 360);
+  ctx.strokeStyle = "#64748b";
+  ctx.stroke();
 
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
@@ -160,7 +178,7 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
   ctx.fillText(
     "Issued by Maanagaram City Authority • Immigration Division",
     60,
-    390
+    395
   );
 
   return {
