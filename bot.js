@@ -16,7 +16,7 @@ client.once("clientReady", () => {
 });
 
 /* =========================
-   SAFE EDIT FUNCTION
+   SAFE EDIT
 ========================= */
 const safeEdit = async (interaction, data) => {
   try {
@@ -35,7 +35,7 @@ client.on("interactionCreate", async (interaction) => {
   const [action, userId] = interaction.customId.split("_");
 
   try {
-    // ✅ ACKNOWLEDGE (prevents timeout)
+    // ✅ ACK
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferUpdate();
     }
@@ -51,20 +51,30 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
+    if (!member.manageable) {
+      return safeEdit(interaction, {
+        content: "⚠️ Cannot modify user (role hierarchy issue).",
+        components: [],
+      });
+    }
+
     /* ================= ACCEPT ================= */
     if (action === "accept") {
-      if (!member.manageable) {
-        return safeEdit(interaction, {
-          content: "⚠️ Cannot modify user (role hierarchy issue).",
-          components: [],
-        });
-      }
-
       try {
+        // ✅ Add accepted role
         await member.roles.add(process.env.ROLE_ID);
+
+        // ❌ Remove pending role if exists
+        if (member.roles.cache.has(process.env.PENDING_ROLE_ID)) {
+          await member.roles.remove(process.env.PENDING_ROLE_ID);
+          console.log("✅ Pending role removed");
+        }
+
       } catch (err) {
+        console.error("❌ Accept role error:", err);
+
         return safeEdit(interaction, {
-          content: "⚠️ Failed to assign role.",
+          content: "⚠️ Failed to update roles.",
           components: [],
         });
       }
@@ -79,7 +89,7 @@ client.on("interactionCreate", async (interaction) => {
         );
       }
 
-      // ❌ REMOVE BUTTONS
+      // ❌ Remove buttons
       await interaction.message.edit({ components: [] });
 
       return safeEdit(interaction, {
@@ -90,6 +100,16 @@ client.on("interactionCreate", async (interaction) => {
 
     /* ================= REJECT ================= */
     if (action === "reject") {
+      try {
+        // ❌ Remove pending role if exists
+        if (member.roles.cache.has(process.env.PENDING_ROLE_ID)) {
+          await member.roles.remove(process.env.PENDING_ROLE_ID);
+        }
+
+      } catch (err) {
+        console.error("❌ Reject role error:", err);
+      }
+
       const rejectChannel = await client.channels
         .fetch(process.env.REJECT_CHANNEL_ID)
         .catch(() => null);
@@ -100,7 +120,7 @@ client.on("interactionCreate", async (interaction) => {
         );
       }
 
-      // ❌ REMOVE BUTTONS
+      // ❌ Remove buttons
       await interaction.message.edit({ components: [] });
 
       return safeEdit(interaction, {
@@ -112,9 +132,21 @@ client.on("interactionCreate", async (interaction) => {
     /* ================= WAITLIST ================= */
     if (action === "waitlist") {
       try {
+        // ❌ Remove accepted role if exists
+        if (member.roles.cache.has(process.env.ROLE_ID)) {
+          await member.roles.remove(process.env.ROLE_ID);
+        }
+
+        // ✅ Add pending role
         await member.roles.add(process.env.PENDING_ROLE_ID);
+
       } catch (err) {
         console.error("❌ Pending role error:", err);
+
+        return safeEdit(interaction, {
+          content: "⚠️ Failed to assign pending role.",
+          components: interaction.message.components,
+        });
       }
 
       const waitChannel = await client.channels
