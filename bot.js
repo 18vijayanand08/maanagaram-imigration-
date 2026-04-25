@@ -32,7 +32,8 @@ const safeEdit = async (interaction, data) => {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return;
 
-  const [action, userId] = interaction.customId.split("_");
+  // 🔥 NOW INCLUDES APPLICATION ID
+  const [action, userId, applicationId] = interaction.customId.split("_");
 
   try {
     // ✅ ACK
@@ -61,13 +62,11 @@ client.on("interactionCreate", async (interaction) => {
     /* ================= ACCEPT ================= */
     if (action === "accept") {
       try {
-        // ✅ Add accepted role
         await member.roles.add(process.env.ROLE_ID);
 
-        // ❌ Remove pending role if exists
+        // ❌ Remove pending role
         if (member.roles.cache.has(process.env.PENDING_ROLE_ID)) {
           await member.roles.remove(process.env.PENDING_ROLE_ID);
-          console.log("✅ Pending role removed");
         }
 
       } catch (err) {
@@ -85,15 +84,14 @@ client.on("interactionCreate", async (interaction) => {
 
       if (visaChannel) {
         await visaChannel.send(
-          `🎉 <@${userId}> your visa has been accepted! Welcome to Maanagaram.`
+          `🎉 <@${userId}> your visa has been accepted!\n🆔 Application ID: **${applicationId}**`
         );
       }
 
-      // ❌ Remove buttons
       await interaction.message.edit({ components: [] });
 
       return safeEdit(interaction, {
-        content: `✅ Accepted <@${userId}> by ${interaction.user.tag}`,
+        content: `✅ Accepted <@${userId}> | 🆔 ${applicationId}`,
         components: [],
       });
     }
@@ -101,11 +99,9 @@ client.on("interactionCreate", async (interaction) => {
     /* ================= REJECT ================= */
     if (action === "reject") {
       try {
-        // ❌ Remove pending role if exists
         if (member.roles.cache.has(process.env.PENDING_ROLE_ID)) {
           await member.roles.remove(process.env.PENDING_ROLE_ID);
         }
-
       } catch (err) {
         console.error("❌ Reject role error:", err);
       }
@@ -116,15 +112,14 @@ client.on("interactionCreate", async (interaction) => {
 
       if (rejectChannel) {
         await rejectChannel.send(
-          `❌ <@${userId}> Sorry your application is rejected due to missing requirements.\nPlease take help from <@&${process.env.IMMIGRATION_ROLE_ID}>`
+          `❌ <@${userId}> your application has been rejected.\n🆔 Application ID: **${applicationId}**\nPlease contact <@&${process.env.IMMIGRATION_ROLE_ID}>`
         );
       }
 
-      // ❌ Remove buttons
       await interaction.message.edit({ components: [] });
 
       return safeEdit(interaction, {
-        content: `❌ Rejected <@${userId}> by ${interaction.user.tag}`,
+        content: `❌ Rejected <@${userId}> | 🆔 ${applicationId}`,
         components: [],
       });
     }
@@ -132,12 +127,10 @@ client.on("interactionCreate", async (interaction) => {
     /* ================= WAITLIST ================= */
     if (action === "waitlist") {
       try {
-        // ❌ Remove accepted role if exists
         if (member.roles.cache.has(process.env.ROLE_ID)) {
           await member.roles.remove(process.env.ROLE_ID);
         }
 
-        // ✅ Add pending role
         await member.roles.add(process.env.PENDING_ROLE_ID);
 
       } catch (err) {
@@ -155,13 +148,12 @@ client.on("interactionCreate", async (interaction) => {
 
       if (waitChannel) {
         await waitChannel.send(
-          `⏳ <@${userId}> your application is in waiting list.\nJoin <#${process.env.WAITING_VC_ID}> to complete your visa process.`
+          `⏳ <@${userId}> your application is in waiting list.\n🆔 Application ID: **${applicationId}**\nJoin <#${process.env.WAITING_VC_ID}>`
         );
       }
 
-      // ✅ KEEP BUTTONS
       return safeEdit(interaction, {
-        content: `⏳ <@${userId}> moved to waiting list by ${interaction.user.tag}`,
+        content: `⏳ Waiting List | <@${userId}> | 🆔 ${applicationId}`,
         components: interaction.message.components,
       });
     }
