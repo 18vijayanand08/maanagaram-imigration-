@@ -34,7 +34,7 @@ app.get("/auth/discord", async (req, res) => {
       redirect_uri: redirectUri,
     });
 
-    /* ================= TOKEN ================= */
+    /* TOKEN */
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       params,
@@ -44,7 +44,7 @@ app.get("/auth/discord", async (req, res) => {
       }
     );
 
-    /* ================= USER ================= */
+    /* USER */
     const userRes = await axios.get(
       "https://discord.com/api/users/@me",
       {
@@ -74,7 +74,7 @@ app.post("/apply", async (req, res) => {
   try {
     const { username, discordId, avatar, answers } = req.body;
 
-    /* ================= VALIDATION ================= */
+    /* VALIDATION */
     if (!username || !discordId || !answers) {
       return res.status(400).json({ error: "Missing fields" });
     }
@@ -82,12 +82,12 @@ app.post("/apply", async (req, res) => {
     const required = ["q1","q2","q3","q4","q5","q6","q7","q8"];
 
     for (const q of required) {
-      if (!answers[q]) {
+      if (!answers[q] || answers[q].trim() === "") {
         return res.status(400).json({ error: `Missing ${q}` });
       }
     }
 
-    /* ================= CHANNEL ================= */
+    /* CHANNEL */
     const channel = await client.channels
       .fetch(process.env.APPLICATION_CHANNEL_ID)
       .catch(() => null);
@@ -97,16 +97,16 @@ app.post("/apply", async (req, res) => {
       return res.status(500).json({ error: "Channel not found" });
     }
 
-    /* ================= AVATAR ================= */
+    /* AVATAR */
     const avatarUrl = avatar
       ? `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.png`
       : `https://cdn.discordapp.com/embed/avatars/${Number(discordId) % 5}.png`;
 
-    /* ================= SAFE TEXT ================= */
+    /* SAFE TEXT */
     const safe = (text) =>
       text.length > 1024 ? text.substring(0, 1020) + "..." : text;
 
-    /* ================= EMBED ================= */
+    /* EMBED */
     const embed = {
       title: "📄 Green Card Application",
       color: 0x22d3ee,
@@ -118,7 +118,7 @@ app.post("/apply", async (req, res) => {
         { name: "1️⃣ Real Name", value: safe(answers.q1) },
         { name: "2️⃣ Real Age", value: safe(answers.q2) },
 
-        { name: "3️⃣ Vehicle DM", value: safe(answers.q3) },
+        { name: "3️⃣ Vehicle Deathmatch", value: safe(answers.q3) },
         { name: "4️⃣ Random Deathmatch", value: safe(answers.q4) },
         { name: "5️⃣ Combat Logging", value: safe(answers.q5) },
         { name: "6️⃣ Powergaming", value: safe(answers.q6) },
@@ -135,7 +135,7 @@ app.post("/apply", async (req, res) => {
       timestamp: new Date(),
     };
 
-    /* ================= SEND ================= */
+    /* SEND MESSAGE */
     await channel.send({
       content: `📥 New Application from <@${discordId}>`,
       embeds: [embed],
@@ -155,6 +155,12 @@ app.post("/apply", async (req, res) => {
               label: "Reject",
               style: 4,
               custom_id: `reject_${discordId}`,
+            },
+            {
+              type: 2,
+              label: "Wait List",
+              style: 2,
+              custom_id: `waitlist_${discordId}`,
             },
           ],
         },
@@ -176,7 +182,7 @@ app.post("/apply", async (req, res) => {
 });
 
 /* =========================
-   🚀 START SERVER
+   START SERVER
 ========================= */
 const PORT = process.env.PORT || 5000;
 
