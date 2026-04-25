@@ -99,7 +99,7 @@ app.post("/apply", async (req, res) => {
       }
     }
 
-    /* GENERATE APPLICATION ID */
+    /* 🆔 GENERATE APPLICATION ID */
     const applicationId = generateApplicationId();
 
     /* CHANNEL */
@@ -152,7 +152,7 @@ app.post("/apply", async (req, res) => {
       timestamp: new Date(),
     };
 
-    /* SEND MESSAGE */
+    /* 🚨 CRITICAL FIX: PASS applicationId INTO BUTTONS */
     await channel.send({
       content: `📥 New Application from <@${discordId}>`,
       embeds: [embed],
@@ -165,19 +165,19 @@ app.post("/apply", async (req, res) => {
               type: 2,
               label: "Accept",
               style: 3,
-              custom_id: `accept_${discordId}`,
+              custom_id: `accept_${discordId}_${applicationId}`,
             },
             {
               type: 2,
               label: "Reject",
               style: 4,
-              custom_id: `reject_${discordId}`,
+              custom_id: `reject_${discordId}_${applicationId}`,
             },
             {
               type: 2,
               label: "Wait List",
               style: 2,
-              custom_id: `waitlist_${discordId}`,
+              custom_id: `waitlist_${discordId}_${applicationId}`,
             },
           ],
         },
