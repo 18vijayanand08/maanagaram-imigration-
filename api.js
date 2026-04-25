@@ -26,22 +26,21 @@ app.get("/auth/discord", async (req, res) => {
         ? "https://maanagaram.netlify.app/auth/callback"
         : "http://localhost:5173/auth/callback";
 
-    const params = new URLSearchParams();
-    params.append("client_id", process.env.CLIENT_ID);
-    params.append("client_secret", process.env.CLIENT_SECRET);
-    params.append("grant_type", "authorization_code");
-    params.append("code", code);
-    params.append("redirect_uri", redirectUri);
+    const params = new URLSearchParams({
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+    });
 
     /* ================= TOKEN ================= */
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       params,
       {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        timeout: 10000, // 🔥 prevents hanging
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        timeout: 10000,
       }
     );
 
@@ -75,8 +74,17 @@ app.post("/apply", async (req, res) => {
   try {
     const { username, discordId, avatar, answers } = req.body;
 
-    if (!username || !discordId || !answers?.q1 || !answers?.q2) {
+    /* ================= VALIDATION ================= */
+    if (!username || !discordId || !answers) {
       return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const required = ["q1","q2","q3","q4","q5","q6","q7","q8"];
+
+    for (const q of required) {
+      if (!answers[q]) {
+        return res.status(400).json({ error: `Missing ${q}` });
+      }
     }
 
     /* ================= CHANNEL ================= */
@@ -94,24 +102,44 @@ app.post("/apply", async (req, res) => {
       ? `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.png`
       : `https://cdn.discordapp.com/embed/avatars/${Number(discordId) % 5}.png`;
 
+    /* ================= SAFE TEXT ================= */
+    const safe = (text) =>
+      text.length > 1024 ? text.substring(0, 1020) + "..." : text;
+
+    /* ================= EMBED ================= */
+    const embed = {
+      title: "📄 Green Card Application",
+      color: 0x22d3ee,
+
+      fields: [
+        { name: "👤 Username", value: username, inline: true },
+        { name: "🆔 Discord ID", value: discordId, inline: true },
+
+        { name: "1️⃣ Real Name", value: safe(answers.q1) },
+        { name: "2️⃣ Real Age", value: safe(answers.q2) },
+
+        { name: "3️⃣ Vehicle DM", value: safe(answers.q3) },
+        { name: "4️⃣ Random Deathmatch", value: safe(answers.q4) },
+        { name: "5️⃣ Combat Logging", value: safe(answers.q5) },
+        { name: "6️⃣ Powergaming", value: safe(answers.q6) },
+        { name: "7️⃣ Metagaming", value: safe(answers.q7) },
+        { name: "8️⃣ Rule Violation Action", value: safe(answers.q8) },
+      ],
+
+      thumbnail: { url: avatarUrl },
+
+      footer: {
+        text: "Maanagaram RP • Application System",
+      },
+
+      timestamp: new Date(),
+    };
+
     /* ================= SEND ================= */
     await channel.send({
       content: `📥 New Application from <@${discordId}>`,
-      embeds: [
-        {
-          title: "📄 Green Card Application",
-          color: 0x22d3ee,
-          fields: [
-            { name: "👤 Username", value: username, inline: true },
-            { name: "🆔 Discord ID", value: discordId, inline: true },
-            { name: "📌 Why join?", value: answers.q1.substring(0, 1024) },
-            { name: "🎮 Experience", value: answers.q2.substring(0, 1024) },
-          ],
-          thumbnail: { url: avatarUrl },
-          footer: { text: "Maanagaram RP • Application System" },
-          timestamp: new Date(),
-        },
-      ],
+      embeds: [embed],
+
       components: [
         {
           type: 1,
@@ -133,6 +161,8 @@ app.post("/apply", async (req, res) => {
       ],
     });
 
+    console.log(`✅ Application sent for ${username}`);
+
     return res.json({ success: true });
 
   } catch (err) {
@@ -153,10 +183,10 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 API running on port ${PORT}`);
 
-  // 🔥 Debug check (VERY USEFUL)
   console.log("ENV CHECK:", {
     CLIENT_ID: !!process.env.CLIENT_ID,
     CLIENT_SECRET: !!process.env.CLIENT_SECRET,
     BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN,
+    CHANNEL_ID: !!process.env.APPLICATION_CHANNEL_ID,
   });
 });
