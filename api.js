@@ -154,7 +154,7 @@ app.post("/apply", async (req, res) => {
 
     /* 🚨 CRITICAL FIX: PASS applicationId INTO BUTTONS */
     await channel.send({
-      content: `📥 New Application from <@${discordId}>`,
+      content: `📥 New Application from <@${discordId}>\n<@&${process.env.IMMIGRATION_ROLE_ID}>`,
       embeds: [embed],
 
       components: [
