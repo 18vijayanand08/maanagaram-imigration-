@@ -166,6 +166,8 @@ app.post("/apply", async (req, res) => {
 /* =========================
    🚀 START SERVER
 ========================= */
-app.listen(process.env.PORT, () => {
-  console.log(`🚀 API running on port ${process.env.PORT}`);
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 API running on port ${PORT}`);
 });
