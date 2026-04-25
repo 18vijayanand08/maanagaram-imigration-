@@ -1,11 +1,8 @@
-# nixpacks.toml
 [phases.setup]
-nixPkgs = [
-  "nodejs",
-  "pkg-config",
-  "cairo",
-  "pango",
-  "libpng",
-  "jpeg",
-  "giflib"
+aptPkgs = [
+  "libcairo2-dev",
+  "libpango1.0-dev",
+  "libjpeg-dev",
+  "libgif-dev",
+  "librsvg2-dev"
 ]
