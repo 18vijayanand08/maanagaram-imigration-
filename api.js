@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
@@ -20,11 +21,10 @@ app.get("/auth/discord", async (req, res) => {
       return res.status(400).json({ error: "No code provided" });
     }
 
-    // 🔥 USE ENV BASED REDIRECT
     const redirectUri =
-  process.env.NODE_ENV === "production"
-    ? "https://maanagaram.netlify.app/auth/callback"
-    : "http://localhost:5173/auth/callback";
+      process.env.NODE_ENV === "production"
+        ? "https://maanagaram.netlify.app/auth/callback"
+        : "http://localhost:5173/auth/callback";
 
     const params = new URLSearchParams();
     params.append("client_id", process.env.CLIENT_ID);
@@ -41,6 +41,7 @@ app.get("/auth/discord", async (req, res) => {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
+        timeout: 10000, // 🔥 prevents hanging
       }
     );
 
@@ -51,6 +52,7 @@ app.get("/auth/discord", async (req, res) => {
         headers: {
           Authorization: `Bearer ${tokenRes.data.access_token}`,
         },
+        timeout: 10000,
       }
     );
 
@@ -73,17 +75,17 @@ app.post("/apply", async (req, res) => {
   try {
     const { username, discordId, avatar, answers } = req.body;
 
-    /* ================= VALIDATION ================= */
     if (!username || !discordId || !answers?.q1 || !answers?.q2) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
     /* ================= CHANNEL ================= */
-    const channel = await client.channels.fetch(
-      process.env.APPLICATION_CHANNEL_ID
-    );
+    const channel = await client.channels
+      .fetch(process.env.APPLICATION_CHANNEL_ID)
+      .catch(() => null);
 
     if (!channel) {
+      console.error("❌ Channel not found");
       return res.status(500).json({ error: "Channel not found" });
     }
 
@@ -99,40 +101,17 @@ app.post("/apply", async (req, res) => {
         {
           title: "📄 Green Card Application",
           color: 0x22d3ee,
-
           fields: [
-            {
-              name: "👤 Username",
-              value: username,
-              inline: true,
-            },
-            {
-              name: "🆔 Discord ID",
-              value: discordId,
-              inline: true,
-            },
-            {
-              name: "📌 Why join?",
-              value: answers.q1.substring(0, 1024),
-            },
-            {
-              name: "🎮 Experience",
-              value: answers.q2.substring(0, 1024),
-            },
+            { name: "👤 Username", value: username, inline: true },
+            { name: "🆔 Discord ID", value: discordId, inline: true },
+            { name: "📌 Why join?", value: answers.q1.substring(0, 1024) },
+            { name: "🎮 Experience", value: answers.q2.substring(0, 1024) },
           ],
-
-          thumbnail: {
-            url: avatarUrl,
-          },
-
-          footer: {
-            text: "Maanagaram RP • Application System",
-          },
-
+          thumbnail: { url: avatarUrl },
+          footer: { text: "Maanagaram RP • Application System" },
           timestamp: new Date(),
         },
       ],
-
       components: [
         {
           type: 1,
@@ -173,4 +152,11 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 API running on port ${PORT}`);
+
+  // 🔥 Debug check (VERY USEFUL)
+  console.log("ENV CHECK:", {
+    CLIENT_ID: !!process.env.CLIENT_ID,
+    CLIENT_SECRET: !!process.env.CLIENT_SECRET,
+    BOT_TOKEN: !!process.env.DISCORD_BOT_TOKEN,
+  });
 });
