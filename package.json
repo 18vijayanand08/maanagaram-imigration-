@@ -5,6 +5,7 @@
   "main": "api.js",
   "scripts": {
     "start": "node api.js",
+    "build": "npm install",
     "dev": "node api.js"
   },
   "keywords": [
