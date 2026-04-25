@@ -72,12 +72,19 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
   ctx.fillRect(30, 30, WIDTH - 60, 80);
 
   /* ================= LOGO ================= */
-  try {
-    const logo = await loadImage(logoPath);
-    ctx.drawImage(logo, 50, 45, 50, 50);
-  } catch (err) {
-    console.log("⚠️ Logo load failed:", err.message);
-  }
+/* ================= LOGO ================= */
+try {
+  const logo = await loadImage(logoPath);
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  // draw smaller for sharpness
+  ctx.drawImage(logo, 50, 40, 60, 60);
+
+} catch (err) {
+  console.log("⚠️ Logo load failed:", err.message);
+}
 
   /* ================= HEADER TEXT ================= */
   ctx.fillStyle = "#000";
@@ -164,7 +171,7 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
   /* ================= SIGNATURE ================= */
   ctx.fillStyle = "#64748b";
   ctx.font = "12px Inter";
-  ctx.fillText("Authorized Officer", 650, 350);
+  ctx.fillText("Authorized By Immigration Dept", 650, 350);
 
   ctx.beginPath();
   ctx.moveTo(650, 360);
