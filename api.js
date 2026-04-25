@@ -34,7 +34,6 @@ app.get("/auth/discord", async (req, res) => {
       redirect_uri: redirectUri,
     });
 
-    /* TOKEN */
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       params,
@@ -44,7 +43,6 @@ app.get("/auth/discord", async (req, res) => {
       }
     );
 
-    /* USER */
     const userRes = await axios.get(
       "https://discord.com/api/users/@me",
       {
@@ -68,6 +66,20 @@ app.get("/auth/discord", async (req, res) => {
 });
 
 /* =========================
+   🆔 GENERATE APPLICATION ID
+========================= */
+const generateApplicationId = () => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let id = "MCRP-";
+
+  for (let i = 0; i < 6; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return id;
+};
+
+/* =========================
    📝 APPLY ROUTE
 ========================= */
 app.post("/apply", async (req, res) => {
@@ -86,6 +98,9 @@ app.post("/apply", async (req, res) => {
         return res.status(400).json({ error: `Missing ${q}` });
       }
     }
+
+    /* GENERATE APPLICATION ID */
+    const applicationId = generateApplicationId();
 
     /* CHANNEL */
     const channel = await client.channels
@@ -112,6 +127,8 @@ app.post("/apply", async (req, res) => {
       color: 0x22d3ee,
 
       fields: [
+        { name: "🆔 Application ID", value: applicationId },
+
         { name: "👤 Username", value: username, inline: true },
         { name: "🆔 Discord ID", value: discordId, inline: true },
 
@@ -167,9 +184,13 @@ app.post("/apply", async (req, res) => {
       ],
     });
 
-    console.log(`✅ Application sent for ${username}`);
+    console.log(`✅ Application sent for ${username} | ${applicationId}`);
 
-    return res.json({ success: true });
+    /* RETURN TO FRONTEND */
+    return res.json({
+      success: true,
+      applicationId,
+    });
 
   } catch (err) {
     console.error("❌ Apply Error:", err);
@@ -182,7 +203,7 @@ app.post("/apply", async (req, res) => {
 });
 
 /* =========================
-   START SERVER
+   🚀 START SERVER
 ========================= */
 const PORT = process.env.PORT || 5000;
 
