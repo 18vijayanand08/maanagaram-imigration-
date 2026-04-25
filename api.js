@@ -23,7 +23,7 @@ app.get("/auth/discord", async (req, res) => {
     // 🔥 USE ENV BASED REDIRECT
     const redirectUri =
   process.env.NODE_ENV === "production"
-    ? "https://maanagaram-imigration.onrender.com"
+    ? "https://maanagaram.netlify.app/auth/callback"
     : "http://localhost:5173/auth/callback";
 
     const params = new URLSearchParams();
