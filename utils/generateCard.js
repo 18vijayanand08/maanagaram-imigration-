@@ -27,41 +27,54 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
 
   /* ================= GLOW BORDER ================= */
   ctx.strokeStyle = color;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4;
 
   ctx.shadowColor = color;
-  ctx.shadowBlur = 30;
+  ctx.shadowBlur = 25;
 
   ctx.strokeRect(10, 10, WIDTH - 20, HEIGHT - 20);
 
   ctx.shadowBlur = 0;
 
+  /* ================= GLASS PANEL ================= */
+  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  ctx.fillRect(30, 80, 520, 260);
+
+  /* ================= RESET SHADOW (IMPORTANT) ================= */
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = "transparent";
+
   /* ================= TITLE ================= */
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 32px Arial";
+  ctx.font = "bold 34px sans-serif";
   ctx.fillText("MAANAGARAM RP", 40, 60);
 
   /* ================= STATUS BADGE ================= */
   ctx.fillStyle = color;
-  ctx.font = "bold 26px Arial";
-  ctx.fillText(status.toUpperCase(), 40, 110);
+  ctx.fillRect(40, 90, 160, 40);
+
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 20px sans-serif";
+  ctx.fillText(status.toUpperCase(), 55, 118);
+
+  /* ================= USER LABEL ================= */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "18px sans-serif";
+  ctx.fillText("APPLICANT", 40, 170);
 
   /* ================= USERNAME ================= */
-  ctx.fillStyle = "#e2e8f0";
-  ctx.font = "22px Arial";
-  ctx.fillText("Applicant", 40, 170);
-
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 26px Arial";
+  ctx.font = "bold 28px sans-serif";
   ctx.fillText(username, 40, 205);
 
-  /* ================= APPLICATION ID ================= */
+  /* ================= APPLICATION ID LABEL ================= */
   ctx.fillStyle = "#94a3b8";
-  ctx.font = "18px Arial";
-  ctx.fillText("Application ID", 40, 260);
+  ctx.font = "16px sans-serif";
+  ctx.fillText("APPLICATION ID", 40, 260);
 
+  /* ================= APPLICATION ID ================= */
   ctx.fillStyle = color;
-  ctx.font = "bold 22px Arial";
+  ctx.font = "bold 22px sans-serif";
   ctx.fillText(applicationId || "UNKNOWN", 40, 290);
 
   /* ================= DIVIDER ================= */
@@ -69,16 +82,16 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(40, 310);
-  ctx.lineTo(500, 310);
+  ctx.lineTo(520, 310);
   ctx.stroke();
 
   /* ================= AVATAR ================= */
   try {
     const avatar = await loadImage(avatarUrl);
 
-    const x = 680;
-    const y = 120;
-    const size = 160;
+    const x = 650;
+    const y = 110;
+    const size = 180;
 
     ctx.save();
 
@@ -91,12 +104,12 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
 
     ctx.restore();
 
-    /* Avatar border glow */
+    /* Avatar glow */
     ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 5;
 
     ctx.shadowColor = color;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 20;
 
     ctx.beginPath();
     ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
@@ -110,8 +123,8 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
 
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
-  ctx.font = "16px Arial";
-  ctx.fillText("Maanagaram RP • Immigration System", 40, 360);
+  ctx.font = "14px sans-serif";
+  ctx.fillText("Maanagaram RP • Immigration System", 40, 370);
 
   /* ================= RETURN ================= */
   return {
