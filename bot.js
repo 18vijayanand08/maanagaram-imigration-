@@ -33,9 +33,14 @@ const safeEdit = async (interaction, data) => {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return;
 
-  const [action, userId, applicationId] = interaction.customId.split("_");
+  const parts = interaction.customId.split("_");
+
+  const action = parts[0];
+  const userId = parts[1];
+  const applicationId = parts[2] || "UNKNOWN";
 
   try {
+    // ✅ ACK (avoid timeout)
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferUpdate();
     }
@@ -68,10 +73,11 @@ client.on("interactionCreate", async (interaction) => {
       try {
         await member.roles.add(process.env.ROLE_ID);
 
-        // remove pending role if exists
+        // remove pending role
         if (member.roles.cache.has(process.env.PENDING_ROLE_ID)) {
           await member.roles.remove(process.env.PENDING_ROLE_ID);
         }
+
       } catch (err) {
         console.error("❌ Accept role error:", err);
 
@@ -81,10 +87,12 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
+      // ✅ GENERATE IMAGE (FIXED)
       const { buffer } = await generateCard({
         username: member.user.username,
         avatarUrl,
         status: "accept",
+        applicationId, // 🔥 FIX
       });
 
       const attachment = new AttachmentBuilder(buffer, {
@@ -102,7 +110,7 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      // remove buttons
+      // ❌ REMOVE BUTTONS
       await interaction.message.edit({ components: [] });
 
       return safeEdit(interaction, {
@@ -125,6 +133,7 @@ client.on("interactionCreate", async (interaction) => {
         username: member.user.username,
         avatarUrl,
         status: "reject",
+        applicationId, // 🔥 FIX
       });
 
       const attachment = new AttachmentBuilder(buffer, {
@@ -153,12 +162,12 @@ client.on("interactionCreate", async (interaction) => {
     /* ================= WAITLIST ================= */
     if (action === "waitlist") {
       try {
-        // remove accepted role if exists
         if (member.roles.cache.has(process.env.ROLE_ID)) {
           await member.roles.remove(process.env.ROLE_ID);
         }
 
         await member.roles.add(process.env.PENDING_ROLE_ID);
+
       } catch (err) {
         console.error("❌ Pending role error:", err);
 
@@ -172,6 +181,7 @@ client.on("interactionCreate", async (interaction) => {
         username: member.user.username,
         avatarUrl,
         status: "waitlist",
+        applicationId, // 🔥 FIX
       });
 
       const attachment = new AttachmentBuilder(buffer, {
@@ -189,7 +199,7 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      // keep buttons
+      // ✅ KEEP BUTTONS
       return safeEdit(interaction, {
         content: `⏳ Waiting List | <@${userId}> | 🆔 ${applicationId}`,
         components: interaction.message.components,
