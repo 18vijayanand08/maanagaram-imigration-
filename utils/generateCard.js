@@ -62,6 +62,12 @@ async function generateCard({
   ctx.fillStyle = "#041020";
   ctx.fillRect(30, 30, 300, HEIGHT - 60);
 
+  /* ===== LEFT TOP LABEL ===== */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "bold 12px Inter";
+  ctx.textAlign = "center";
+  ctx.fillText("OFFICIAL PASS", 180, 60);
+
   /* ================= LOGO ================= */
   try {
     const logo = await loadImage(logoPath);
@@ -85,12 +91,19 @@ async function generateCard({
   /* ================= LOGO TEXT ================= */
   ctx.fillStyle = color;
   ctx.font = "bold 20px Inter";
-  ctx.textAlign = "center";
   ctx.fillText("MAANAGARAM CITY", 180, 320);
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
   ctx.fillText("IMMIGRATION AUTHORITY", 180, 345);
+
+  /* ===== LEFT BOTTOM ID STRIP ===== */
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.fillRect(60, 355, 240, 30);
+
+  ctx.fillStyle = color;
+  ctx.font = "bold 14px Inter";
+  ctx.fillText(applicationId || "ID-000000", 180, 375);
 
   ctx.textAlign = "left";
 
@@ -154,6 +167,35 @@ async function generateCard({
   ctx.fillStyle = color;
   ctx.font = "bold 20px Inter";
   ctx.fillText(applicationId || "UNKNOWN", 370, 335);
+
+  /* ================= EXTRA INFO (FILLED SPACE) ================= */
+  const today = new Date();
+  const issueDate = today.toLocaleDateString("en-GB");
+
+  const future = new Date();
+  future.setFullYear(future.getFullYear() + 5);
+  const validDate = future.toLocaleDateString("en-GB");
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "13px Inter";
+  ctx.fillText("ISSUED", 520, 190);
+  ctx.fillText("VALID UNTIL", 520, 240);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 14px Inter";
+  ctx.fillText(issueDate, 520, 210);
+  ctx.fillText(validDate, 520, 260);
+
+  /* ================= SIGNATURE ================= */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "12px Inter";
+  ctx.fillText("Authorized By Immigration Dept", 520, 310);
+
+  ctx.beginPath();
+  ctx.moveTo(520, 320);
+  ctx.lineTo(750, 320);
+  ctx.strokeStyle = "#475569";
+  ctx.stroke();
 
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
