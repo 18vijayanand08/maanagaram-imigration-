@@ -40,7 +40,7 @@ client.on("interactionCreate", async (interaction) => {
   const applicationId = parts[2] || "UNKNOWN";
 
   try {
-    // ✅ ACK (avoid timeout)
+    // ✅ ACK
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferUpdate();
     }
@@ -68,12 +68,28 @@ client.on("interactionCreate", async (interaction) => {
       size: 512,
     });
 
+    /* ================= GET REAL NAME FROM EMBED ================= */
+    let realName = "UNKNOWN";
+
+    try {
+      const embed = interaction.message.embeds[0];
+
+      const realNameField = embed?.fields?.find(f =>
+        f.name.toLowerCase().includes("real name")
+      );
+
+      if (realNameField) {
+        realName = realNameField.value;
+      }
+    } catch (err) {
+      console.log("⚠️ Failed to extract real name");
+    }
+
     /* ================= ACCEPT ================= */
     if (action === "accept") {
       try {
         await member.roles.add(process.env.ROLE_ID);
 
-        // remove pending role
         if (member.roles.cache.has(process.env.PENDING_ROLE_ID)) {
           await member.roles.remove(process.env.PENDING_ROLE_ID);
         }
@@ -87,12 +103,13 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      // ✅ GENERATE IMAGE (FIXED)
       const { buffer } = await generateCard({
         username: member.user.username,
+        realName,
+        userId,
         avatarUrl,
         status: "accept",
-        applicationId, // 🔥 FIX
+        applicationId,
       });
 
       const attachment = new AttachmentBuilder(buffer, {
@@ -110,7 +127,6 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      // ❌ REMOVE BUTTONS
       await interaction.message.edit({ components: [] });
 
       return safeEdit(interaction, {
@@ -131,9 +147,11 @@ client.on("interactionCreate", async (interaction) => {
 
       const { buffer } = await generateCard({
         username: member.user.username,
+        realName,
+        userId,
         avatarUrl,
         status: "reject",
-        applicationId, // 🔥 FIX
+        applicationId,
       });
 
       const attachment = new AttachmentBuilder(buffer, {
@@ -179,9 +197,11 @@ client.on("interactionCreate", async (interaction) => {
 
       const { buffer } = await generateCard({
         username: member.user.username,
+        realName,
+        userId,
         avatarUrl,
         status: "waitlist",
-        applicationId, // 🔥 FIX
+        applicationId,
       });
 
       const attachment = new AttachmentBuilder(buffer, {
@@ -199,7 +219,6 @@ client.on("interactionCreate", async (interaction) => {
         });
       }
 
-      // ✅ KEEP BUTTONS
       return safeEdit(interaction, {
         content: `⏳ Waiting List | <@${userId}> | 🆔 ${applicationId}`,
         components: interaction.message.components,
