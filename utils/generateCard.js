@@ -8,7 +8,7 @@ GlobalFonts.registerFromPath(
 );
 
 /* ================= ASSETS ================= */
-const logoPath = path.join(__dirname, "assets", "logo.png"); // ✅ seal removed
+const logoPath = path.join(__dirname, "assets", "logo.png");
 
 const WIDTH = 900;
 const HEIGHT = 420;
@@ -26,7 +26,6 @@ const STATUS_LABELS = {
   waitlist: "WAITING LIST",
 };
 
-/* ================= MAIN ================= */
 async function generateCard({
   username,
   realName,
@@ -40,7 +39,6 @@ async function generateCard({
   const color = COLORS[status] || "#22D3EE";
   const displayStatus = STATUS_LABELS[status] || "UNKNOWN";
 
-  /* ================= QUALITY ================= */
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
@@ -60,11 +58,11 @@ async function generateCard({
   ctx.fillStyle = "rgba(255,255,255,0.05)";
   ctx.fillRect(30, 30, WIDTH - 60, HEIGHT - 60);
 
-  /* ================= LEFT PANEL (BIG LOGO AREA) ================= */
+  /* ================= LEFT PANEL ================= */
   ctx.fillStyle = "#041020";
   ctx.fillRect(30, 30, 300, HEIGHT - 60);
 
-  /* ================= BIG LOGO (NO BLUR) ================= */
+  /* ================= LOGO ================= */
   try {
     const logo = await loadImage(logoPath);
 
@@ -97,57 +95,29 @@ async function generateCard({
   ctx.textAlign = "left";
 
   /* ================= RIGHT PANEL ================= */
-  ctx.fillStyle = "rgba(255,255,255,0.04)";
+  ctx.fillStyle = "#020617";
   ctx.fillRect(350, 30, WIDTH - 380, HEIGHT - 60);
 
-  /* ================= STATUS BADGE ================= */
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(WIDTH - 230, 50, 180, 40);
-
+  /* ================= HEADER LINE ================= */
   ctx.fillStyle = color;
-  ctx.font = "bold 18px Inter";
-  ctx.fillText(displayStatus, WIDTH - 215, 78);
+  ctx.fillRect(350, 30, WIDTH - 380, 5);
 
-  /* ================= TITLE ================= */
+  /* ================= STATUS ================= */
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 26px Inter";
-  ctx.fillText("IMMIGRATION ID CARD", 370, 100);
-
-  /* ================= USER INFO ================= */
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "14px Inter";
-  ctx.fillText("FULL NAME", 370, 150);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 28px Inter";
-  ctx.fillText(realName || "UNKNOWN", 370, 180);
-
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "14px Inter";
-  ctx.fillText("USERNAME", 370, 230);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 22px Inter";
-  ctx.fillText(username || "UNKNOWN", 370, 260);
-
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "14px Inter";
-  ctx.fillText("APPLICATION ID", 370, 310);
+  ctx.font = "bold 16px Inter";
+  ctx.fillText("STATUS", 370, 80);
 
   ctx.fillStyle = color;
   ctx.font = "bold 22px Inter";
-  ctx.fillText(applicationId || "UNKNOWN", 370, 340);
+  ctx.fillText(displayStatus, 370, 110);
 
   /* ================= AVATAR ================= */
   try {
     const avatar = await loadImage(avatarUrl);
 
-    const size = 130;
-    const x = WIDTH - size - 50;
-    const y = 160;
-
-    ctx.fillStyle = "#0f172a";
-    ctx.fillRect(x - 10, y - 10, size + 20, size + 20);
+    const size = 120;
+    const x = WIDTH - size - 60;
+    const y = 70;
 
     ctx.drawImage(avatar, x, y, size, size);
 
@@ -158,6 +128,32 @@ async function generateCard({
   } catch (err) {
     console.log("⚠️ Avatar load failed:", err.message);
   }
+
+  /* ================= DIVIDER ================= */
+  ctx.beginPath();
+  ctx.moveTo(350, 150);
+  ctx.lineTo(WIDTH - 30, 150);
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.stroke();
+
+  /* ================= INFO BLOCK ================= */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "13px Inter";
+
+  ctx.fillText("FULL NAME", 370, 190);
+  ctx.fillText("USERNAME", 370, 250);
+  ctx.fillText("APPLICATION ID", 370, 310);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 24px Inter";
+  ctx.fillText(realName || "UNKNOWN", 370, 215);
+
+  ctx.font = "bold 20px Inter";
+  ctx.fillText(username || "UNKNOWN", 370, 275);
+
+  ctx.fillStyle = color;
+  ctx.font = "bold 20px Inter";
+  ctx.fillText(applicationId || "UNKNOWN", 370, 335);
 
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
