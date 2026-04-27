@@ -9,7 +9,7 @@ GlobalFonts.registerFromPath(
 
 /* ================= ASSETS ================= */
 const logoPath = path.join(__dirname, "assets", "logo.png");
-const sealPath = path.join(__dirname, "assets", "seal.png"); // 👈 add govt seal image
+const sealPath = path.join(__dirname, "assets", "seal.png");
 
 const WIDTH = 900;
 const HEIGHT = 420;
@@ -41,7 +41,7 @@ async function generateCard({
   const color = COLORS[status] || "#22D3EE";
   const displayStatus = STATUS_LABELS[status] || "UNKNOWN";
 
-  /* ================= HIGH QUALITY RENDER ================= */
+  /* ================= QUALITY ================= */
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
@@ -54,7 +54,6 @@ async function generateCard({
   ctx.globalAlpha = 0.03;
   ctx.translate(WIDTH / 2, HEIGHT / 2);
   ctx.rotate(-Math.PI / 6);
-
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 90px Inter";
   ctx.textAlign = "center";
@@ -77,45 +76,31 @@ async function generateCard({
   ctx.fillStyle = color;
   ctx.fillRect(30, 30, WIDTH - 60, 80);
 
-  /* ================= LOGO (ULTRA SHARP FIX) ================= */
+  /* ================= LOGO (SHARP + BIGGER) ================= */
   try {
     const logo = await loadImage(logoPath);
 
-    const size = 85;
+    const maxSize = 100;
     const x = 50;
-    const y = 30 + (80 - size) / 2;
+    const y = 40;
 
-    // 👇 crop center square to avoid distortion
-    const minSide = Math.min(logo.width, logo.height);
-    const sx = (logo.width - minSide) / 2;
-    const sy = (logo.height - minSide) / 2;
+    const scale = Math.min(maxSize / logo.width, maxSize / logo.height);
+    const w = logo.width * scale;
+    const h = logo.height * scale;
 
-    ctx.save();
-
-    // 👇 circular logo (cleaner look)
-    ctx.beginPath();
-    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-    ctx.clip();
-
-    ctx.drawImage(
-      logo,
-      sx, sy, minSide, minSide,
-      x, y, size, size
-    );
-
-    ctx.restore();
-
+    ctx.drawImage(logo, x, y, w, h);
   } catch (err) {
     console.log("⚠️ Logo load failed:", err.message);
   }
 
   /* ================= HEADER TEXT ================= */
   ctx.fillStyle = "#000";
-  ctx.font = "bold 28px Inter";
-  ctx.fillText("MAANAGARAM CITY", 150, 65);
+  ctx.font = "bold 30px Inter";
+  ctx.fillText("MAANAGARAM CITY", 170, 65);
 
   ctx.font = "16px Inter";
-  ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", 150, 90);
+  ctx.fillStyle = "#022c22";
+  ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", 170, 90);
 
   /* ================= STATUS BADGE ================= */
   ctx.fillStyle = "#ffffff";
@@ -129,7 +114,7 @@ async function generateCard({
   ctx.fillStyle = "rgba(255,255,255,0.04)";
   ctx.fillRect(50, 140, 500, 200);
 
-  /* ================= REAL NAME ================= */
+  /* ================= TEXT ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
   ctx.fillText("FULL NAME", 70, 185);
@@ -138,7 +123,6 @@ async function generateCard({
   ctx.font = "bold 26px Inter";
   ctx.fillText(realName || "UNKNOWN", 70, 215);
 
-  /* ================= USERNAME ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
   ctx.fillText("USERNAME", 70, 255);
@@ -147,7 +131,6 @@ async function generateCard({
   ctx.font = "bold 22px Inter";
   ctx.fillText(username || "UNKNOWN", 70, 285);
 
-  /* ================= APPLICATION ID ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
   ctx.fillText("APPLICATION NUMBER", 70, 325);
@@ -156,51 +139,55 @@ async function generateCard({
   ctx.font = "bold 20px Inter";
   ctx.fillText(applicationId || "UNKNOWN", 70, 355);
 
-  /* ================= AVATAR ================= */
+  /* ================= AVATAR (PROPER ALIGNMENT) ================= */
   try {
     const avatar = await loadImage(avatarUrl);
 
-    const size = 170;
-    const x = 650;
-    const y = 150;
+    const size = 160;
+    const x = 660;
+    const y = 135;
 
-    ctx.fillStyle = "rgba(255,255,255,0.06)";
-    ctx.fillRect(x - 10, y - 10, size + 20, size + 20);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(x - 12, y - 12, size + 24, size + 24);
 
     ctx.drawImage(avatar, x, y, size, size);
 
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
     ctx.strokeRect(x, y, size, size);
-
   } catch (err) {
     console.log("⚠️ Avatar load failed:", err.message);
   }
 
-  /* ================= GOVT SEAL ================= */
+  /* ================= SIGNATURE ================= */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "12px Inter";
+  ctx.fillText("Authorized by Immigration Dept", 650, 310);
+
+  ctx.beginPath();
+  ctx.moveTo(650, 320);
+  ctx.lineTo(820, 320);
+  ctx.strokeStyle = "#475569";
+  ctx.stroke();
+
+  /* ================= GOVT SEAL (CRISP + OVERLAP) ================= */
   try {
     const seal = await loadImage(sealPath);
 
-    ctx.globalAlpha = 0.9;
+    const sealSize = 110;
+    const x = 735;
+    const y = 260;
 
-    ctx.drawImage(seal, 720, 300, 120, 120);
+    const scale = Math.min(sealSize / seal.width, sealSize / seal.height);
+    const w = seal.width * scale;
+    const h = seal.height * scale;
 
+    ctx.globalAlpha = 0.95;
+    ctx.drawImage(seal, x, y, w, h);
     ctx.globalAlpha = 1;
-
   } catch (err) {
     console.log("⚠️ Seal load failed:", err.message);
   }
-
-  /* ================= SIGNATURE ================= */
-  ctx.fillStyle = "#64748b";
-  ctx.font = "12px Inter";
-  ctx.fillText("Authorized By Immigration Dept", 650, 350);
-
-  ctx.beginPath();
-  ctx.moveTo(650, 360);
-  ctx.lineTo(820, 360);
-  ctx.strokeStyle = "#64748b";
-  ctx.stroke();
 
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
