@@ -66,7 +66,7 @@ async function generateCard({
   ctx.fillStyle = "#94a3b8";
   ctx.font = "bold 12px Inter";
   ctx.textAlign = "center";
-  ctx.fillText("OFFICIAL PASS", 180, 60);
+  ctx.fillText("GREEN CARD", 180, 60);
 
   /* ================= LOGO ================= */
   try {
