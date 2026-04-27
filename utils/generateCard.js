@@ -26,6 +26,23 @@ const STATUS_LABELS = {
   waitlist: "WAITING LIST",
 };
 
+/* ================= BARCODE FUNCTION ================= */
+function drawBarcode(ctx, x, y, width, height, text) {
+  let currentX = x;
+
+  for (let i = 0; i < text.length; i++) {
+    const charCode = text.charCodeAt(i);
+
+    const barWidth = (charCode % 3) + 1; // variable thickness
+
+    ctx.fillStyle = "#d4af37"; // gold
+    ctx.fillRect(currentX, y, barWidth, height);
+
+    currentX += barWidth + 2;
+  }
+}
+
+/* ================= MAIN ================= */
 async function generateCard({
   username,
   realName,
@@ -83,7 +100,7 @@ async function generateCard({
   }
 
   /* ================= LOGO TEXT ================= */
-  ctx.fillStyle = color;
+  ctx.fillStyle = "#d4af37"; // gold
   ctx.font = "bold 20px Inter";
   ctx.textAlign = "center";
   ctx.fillText("MAANAGARAM CITY", 180, 320);
@@ -98,31 +115,32 @@ async function generateCard({
   ctx.fillStyle = "#020617";
   ctx.fillRect(350, 30, WIDTH - 380, HEIGHT - 60);
 
-  /* ================= HEADER LINE ================= */
-  ctx.fillStyle = color;
-  ctx.fillRect(350, 30, WIDTH - 380, 5);
+  /* ================= HEADER ================= */
+  ctx.fillStyle = "#d4af37";
+  ctx.font = "bold 28px Inter";
+  ctx.fillText("IMMIGRATION PASS", 370, 80);
 
   /* ================= STATUS ================= */
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 16px Inter";
-  ctx.fillText("STATUS", 370, 80);
+  ctx.font = "bold 14px Inter";
+  ctx.fillText("STATUS", 370, 120);
 
   ctx.fillStyle = color;
-  ctx.font = "bold 22px Inter";
-  ctx.fillText(displayStatus, 370, 110);
+  ctx.font = "bold 20px Inter";
+  ctx.fillText(displayStatus, 370, 145);
 
   /* ================= AVATAR ================= */
   try {
     const avatar = await loadImage(avatarUrl);
 
-    const size = 120;
+    const size = 110;
     const x = WIDTH - size - 60;
-    const y = 70;
+    const y = 60;
 
     ctx.drawImage(avatar, x, y, size, size);
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#d4af37";
+    ctx.lineWidth = 2;
     ctx.strokeRect(x, y, size, size);
 
   } catch (err) {
@@ -131,29 +149,42 @@ async function generateCard({
 
   /* ================= DIVIDER ================= */
   ctx.beginPath();
-  ctx.moveTo(350, 150);
-  ctx.lineTo(WIDTH - 30, 150);
+  ctx.moveTo(350, 170);
+  ctx.lineTo(WIDTH - 30, 170);
   ctx.strokeStyle = "rgba(255,255,255,0.08)";
   ctx.stroke();
 
-  /* ================= INFO BLOCK ================= */
+  /* ================= INFO ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "13px Inter";
 
-  ctx.fillText("FULL NAME", 370, 190);
-  ctx.fillText("USERNAME", 370, 250);
+  ctx.fillText("FULL NAME", 370, 210);
+  ctx.fillText("USERNAME", 370, 260);
   ctx.fillText("APPLICATION ID", 370, 310);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 24px Inter";
-  ctx.fillText(realName || "UNKNOWN", 370, 215);
+  ctx.font = "bold 22px Inter";
+  ctx.fillText(realName || "UNKNOWN", 370, 235);
 
-  ctx.font = "bold 20px Inter";
-  ctx.fillText(username || "UNKNOWN", 370, 275);
+  ctx.font = "bold 18px Inter";
+  ctx.fillText(username || "UNKNOWN", 370, 285);
 
-  ctx.fillStyle = color;
-  ctx.font = "bold 20px Inter";
+  ctx.fillStyle = "#d4af37";
+  ctx.font = "bold 18px Inter";
   ctx.fillText(applicationId || "UNKNOWN", 370, 335);
+
+  /* ================= BARCODE ================= */
+  const barcodeX = 520;
+  const barcodeY = 240;
+
+  drawBarcode(ctx, barcodeX, barcodeY, 250, 50, applicationId || "123456");
+
+  ctx.strokeStyle = "#d4af37";
+  ctx.strokeRect(barcodeX - 10, barcodeY - 10, 270, 80);
+
+  ctx.fillStyle = "#d4af37";
+  ctx.font = "bold 12px Inter";
+  ctx.fillText("MAANAGARAM CITY", barcodeX, barcodeY + 70);
 
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
