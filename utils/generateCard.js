@@ -7,8 +7,9 @@ GlobalFonts.registerFromPath(
   "Inter"
 );
 
-/* ================= LOGO ================= */
+/* ================= ASSETS ================= */
 const logoPath = path.join(__dirname, "assets", "logo.png");
+const sealPath = path.join(__dirname, "assets", "seal.png"); // 👈 add govt seal image
 
 const WIDTH = 900;
 const HEIGHT = 420;
@@ -20,7 +21,6 @@ const COLORS = {
   waitlist: "#facc15",
 };
 
-/* ================= STATUS LABEL ================= */
 const STATUS_LABELS = {
   accept: "ACCEPTED",
   reject: "REJECTED",
@@ -28,12 +28,22 @@ const STATUS_LABELS = {
 };
 
 /* ================= MAIN ================= */
-async function generateCard({ username, avatarUrl, status, applicationId }) {
+async function generateCard({
+  username,
+  realName,
+  avatarUrl,
+  status,
+  applicationId
+}) {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext("2d");
 
   const color = COLORS[status] || "#22D3EE";
   const displayStatus = STATUS_LABELS[status] || "UNKNOWN";
+
+  /* ================= HIGH QUALITY RENDER ================= */
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 
   /* ================= BACKGROUND ================= */
   ctx.fillStyle = "#020617";
@@ -41,71 +51,71 @@ async function generateCard({ username, avatarUrl, status, applicationId }) {
 
   /* ================= WATERMARK ================= */
   ctx.save();
-  ctx.globalAlpha = 0.04;
+  ctx.globalAlpha = 0.03;
   ctx.translate(WIDTH / 2, HEIGHT / 2);
   ctx.rotate(-Math.PI / 6);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 80px Inter";
+  ctx.font = "bold 90px Inter";
   ctx.textAlign = "center";
   ctx.fillText("MAANAGARAM CITY", 0, 0);
-
   ctx.restore();
 
   /* ================= BORDER ================= */
   ctx.strokeStyle = color;
   ctx.lineWidth = 3;
-
   ctx.shadowColor = color;
   ctx.shadowBlur = 20;
-
   ctx.strokeRect(10, 10, WIDTH - 20, HEIGHT - 20);
-
   ctx.shadowBlur = 0;
 
   /* ================= INNER CARD ================= */
   ctx.fillStyle = "rgba(255,255,255,0.05)";
   ctx.fillRect(30, 30, WIDTH - 60, HEIGHT - 60);
 
-/* ================= HEADER BAR ================= */
-ctx.fillStyle = color;
-ctx.fillRect(30, 30, WIDTH - 60, 80);
+  /* ================= HEADER ================= */
+  ctx.fillStyle = color;
+  ctx.fillRect(30, 30, WIDTH - 60, 80);
 
-/* ================= LOGO ================= */
-let logoWidth = 130;
-let logoHeight = 130;
-let logoX = 45;
-let logoY = 30 + (80 - logoHeight) / 2; // center vertically
+  /* ================= LOGO (ULTRA SHARP FIX) ================= */
+  try {
+    const logo = await loadImage(logoPath);
 
-try {
-  const logo = await loadImage(logoPath);
+    const size = 85;
+    const x = 50;
+    const y = 30 + (80 - size) / 2;
 
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
+    // 👇 crop center square to avoid distortion
+    const minSide = Math.min(logo.width, logo.height);
+    const sx = (logo.width - minSide) / 2;
+    const sy = (logo.height - minSide) / 2;
 
-  // draw logo (bigger + centered)
-  ctx.drawImage(
-    logo,
-    0, 0, logo.width, logo.height,
-    logoX,
-    logoY,
-    logoWidth,
-    logoHeight
-  );
+    ctx.save();
 
-} catch (err) {
-  console.log("⚠️ Logo load failed:", err.message);
-}
+    // 👇 circular logo (cleaner look)
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+    ctx.clip();
 
-/* ================= HEADER TEXT ================= */
-const textStartX = logoX + logoWidth + 20;
+    ctx.drawImage(
+      logo,
+      sx, sy, minSide, minSide,
+      x, y, size, size
+    );
 
-ctx.fillStyle = "#000";
-ctx.font = "bold 28px Inter";
-ctx.fillText("MAANAGARAM CITY", textStartX, 65);
+    ctx.restore();
 
-ctx.font = "16px Inter";
-ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", textStartX, 90);
+  } catch (err) {
+    console.log("⚠️ Logo load failed:", err.message);
+  }
+
+  /* ================= HEADER TEXT ================= */
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 28px Inter";
+  ctx.fillText("MAANAGARAM CITY", 150, 65);
+
+  ctx.font = "16px Inter";
+  ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", 150, 90);
 
   /* ================= STATUS BADGE ================= */
   ctx.fillStyle = "#ffffff";
@@ -119,38 +129,32 @@ ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", textStartX, 90);
   ctx.fillStyle = "rgba(255,255,255,0.04)";
   ctx.fillRect(50, 140, 500, 200);
 
-  /* ================= USER ================= */
+  /* ================= REAL NAME ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
-  ctx.fillText("FULL NAME", 70, 190);
+  ctx.fillText("FULL NAME", 70, 185);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 28px Inter";
-  ctx.fillText(username || "UNKNOWN", 70, 225);
+  ctx.font = "bold 26px Inter";
+  ctx.fillText(realName || "UNKNOWN", 70, 215);
+
+  /* ================= USERNAME ================= */
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "14px Inter";
+  ctx.fillText("USERNAME", 70, 255);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 22px Inter";
+  ctx.fillText(username || "UNKNOWN", 70, 285);
 
   /* ================= APPLICATION ID ================= */
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter";
-  ctx.fillText("APPLICATION NUMBER", 70, 270);
+  ctx.fillText("APPLICATION NUMBER", 70, 325);
 
   ctx.fillStyle = color;
-  ctx.font = "bold 22px Inter";
-  ctx.fillText(applicationId || "UNKNOWN", 70, 300);
-
-  /* ================= STATUS TEXT ================= */
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "14px Inter";
-  ctx.fillText("STATUS", 70, 330);
-
-  ctx.fillStyle = color;
-  ctx.font = "bold 22px Inter";
-  ctx.fillText(displayStatus, 70, 360);
-
-  /* ================= SECURITY STRIP ================= */
-  ctx.fillStyle = color;
-  ctx.globalAlpha = 0.15;
-  ctx.fillRect(50, 360, 500, 6);
-  ctx.globalAlpha = 1;
+  ctx.font = "bold 20px Inter";
+  ctx.fillText(applicationId || "UNKNOWN", 70, 355);
 
   /* ================= AVATAR ================= */
   try {
@@ -160,25 +164,31 @@ ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", textStartX, 90);
     const x = 650;
     const y = 150;
 
-    /* background plate */
     ctx.fillStyle = "rgba(255,255,255,0.06)";
     ctx.fillRect(x - 10, y - 10, size + 20, size + 20);
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y, size, size);
-    ctx.clip();
-
     ctx.drawImage(avatar, x, y, size, size);
-    ctx.restore();
 
-    /* border */
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
     ctx.strokeRect(x, y, size, size);
 
   } catch (err) {
     console.log("⚠️ Avatar load failed:", err.message);
+  }
+
+  /* ================= GOVT SEAL ================= */
+  try {
+    const seal = await loadImage(sealPath);
+
+    ctx.globalAlpha = 0.9;
+
+    ctx.drawImage(seal, 720, 300, 120, 120);
+
+    ctx.globalAlpha = 1;
+
+  } catch (err) {
+    console.log("⚠️ Seal load failed:", err.message);
   }
 
   /* ================= SIGNATURE ================= */
@@ -198,7 +208,7 @@ ctx.fillText("OFFICIAL IMMIGRATION DEPARTMENT", textStartX, 90);
   ctx.fillText(
     "Issued by Maanagaram City Authority • Immigration Division",
     60,
-    395
+    405
   );
 
   return {
