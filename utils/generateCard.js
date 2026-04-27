@@ -186,16 +186,26 @@ async function generateCard({
   ctx.fillText(issueDate, 520, 210);
   ctx.fillText(validDate, 520, 260);
 
-  /* ================= SIGNATURE ================= */
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "12px Inter";
-  ctx.fillText("Authorized By Immigration Dept", 520, 310);
+/* ================= SIGNATURE (BOTTOM RIGHT) ================= */
+const sigText = "Authorized By Immigration Dept";
 
-  ctx.beginPath();
-  ctx.moveTo(520, 320);
-  ctx.lineTo(750, 320);
-  ctx.strokeStyle = "#475569";
-  ctx.stroke();
+// measure text width for right alignment
+const textWidth = ctx.measureText(sigText).width;
+
+// position from right side
+const sigX = WIDTH - 40 - textWidth;
+const sigY = HEIGHT - 70;
+
+ctx.fillStyle = "#94a3b8";
+ctx.font = "12px Inter";
+ctx.fillText(sigText, sigX, sigY);
+
+/* ===== LINE BELOW SIGNATURE ===== */
+ctx.beginPath();
+ctx.moveTo(sigX, sigY + 10);
+ctx.lineTo(WIDTH - 40, sigY + 10);
+ctx.strokeStyle = "#475569";
+ctx.stroke();
 
   /* ================= FOOTER ================= */
   ctx.fillStyle = "#64748b";
