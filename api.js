@@ -34,6 +34,7 @@ app.get("/auth/discord", async (req, res) => {
       redirect_uri: redirectUri,
     });
 
+    /* 🔑 GET TOKEN */
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       params,
@@ -43,17 +44,65 @@ app.get("/auth/discord", async (req, res) => {
       }
     );
 
+    const accessToken = tokenRes.data.access_token;
+
+    /* 👤 GET USER */
     const userRes = await axios.get(
       "https://discord.com/api/users/@me",
       {
         headers: {
-          Authorization: `Bearer ${tokenRes.data.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         timeout: 10000,
       }
     );
 
-    return res.json(userRes.data);
+    const discordUser = userRes.data;
+
+    /* =========================
+       🛡️ GUILD + ROLE CHECK
+    ========================= */
+    const GUILD_ID = process.env.GUILD_ID;
+    const ROLE_ID = process.env.APPROVED_ROLE_ID;
+
+    let memberRes;
+
+    try {
+      memberRes = await axios.get(
+        `https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          timeout: 10000,
+        }
+      );
+    } catch (err) {
+      // ❌ NOT IN SERVER
+      if (err.response?.status === 404) {
+        return res.json({ status: "NOT_IN_SERVER" });
+      }
+
+      console.error("❌ Member fetch error:", err.response?.data || err.message);
+      return res.status(500).json({ error: "Guild fetch failed" });
+    }
+
+    const member = memberRes.data;
+
+    // ❌ ALREADY HAS ROLE
+    if (member.roles.includes(ROLE_ID)) {
+      return res.json({ status: "ALREADY_APPROVED" });
+    }
+
+    /* ✅ NORMAL USER */
+    return res.json({
+      status: "OK",
+      user: {
+        id: discordUser.id,
+        username: discordUser.username,
+        avatar: discordUser.avatar,
+      },
+    });
 
   } catch (err) {
     console.error("❌ OAuth Error:", err.response?.data || err.message);
@@ -86,7 +135,6 @@ app.post("/apply", async (req, res) => {
   try {
     const { username, discordId, avatar, answers } = req.body;
 
-    /* VALIDATION */
     if (!username || !discordId || !answers) {
       return res.status(400).json({ error: "Missing fields" });
     }
@@ -99,10 +147,8 @@ app.post("/apply", async (req, res) => {
       }
     }
 
-    /* 🆔 GENERATE APPLICATION ID */
     const applicationId = generateApplicationId();
 
-    /* CHANNEL */
     const channel = await client.channels
       .fetch(process.env.APPLICATION_CHANNEL_ID)
       .catch(() => null);
@@ -112,16 +158,13 @@ app.post("/apply", async (req, res) => {
       return res.status(500).json({ error: "Channel not found" });
     }
 
-    /* AVATAR */
     const avatarUrl = avatar
       ? `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.png`
       : `https://cdn.discordapp.com/embed/avatars/${Number(discordId) % 5}.png`;
 
-    /* SAFE TEXT */
     const safe = (text) =>
       text.length > 1024 ? text.substring(0, 1020) + "..." : text;
 
-    /* EMBED */
     const embed = {
       title: "📄 Green Card Application",
       color: 0x22d3ee,
@@ -152,7 +195,6 @@ app.post("/apply", async (req, res) => {
       timestamp: new Date(),
     };
 
-    /* 🚨 CRITICAL FIX: PASS applicationId INTO BUTTONS */
     await channel.send({
       content: `📥 New Application from <@${discordId}>\n<@&${process.env.IMMIGRATION_ROLE_ID}>`,
       embeds: [embed],
@@ -186,7 +228,6 @@ app.post("/apply", async (req, res) => {
 
     console.log(`✅ Application sent for ${username} | ${applicationId}`);
 
-    /* RETURN TO FRONTEND */
     return res.json({
       success: true,
       applicationId,
