@@ -63,7 +63,7 @@ app.get("/auth/discord", async (req, res) => {
        🛡️ GUILD + ROLE CHECK
     ========================= */
     const GUILD_ID = process.env.GUILD_ID;
-    const ROLE_ID = process.env.APPROVED_ROLE_ID;
+    const ROLE_ID = process.env.ROLE_ID;
 
     let memberRes;
 
